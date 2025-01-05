@@ -1,25 +1,22 @@
 import re
-
 import streamlit as st
 from PyPDF2 import PdfReader
-from dotenv import load_dotenv
-from langchain_ollama import OllamaEmbeddings
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains.history_aware_retriever import create_history_aware_retriever
 from langchain.chains.retrieval import create_retrieval_chain
-from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain.prompts import PromptTemplate
+from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_community.vectorstores import FAISS
+from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableWithMessageHistory
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_ollama import OllamaEmbeddings
 from langchain_ollama.llms import OllamaLLM
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from spacy.lang.en import English
 
 from htmlTemplates import css, bot_template, user_template
-
 
 llm = OllamaLLM(model="gemma2:2b")
 
@@ -93,7 +90,7 @@ def get_conversation_chain(vectorstore):
     retriever = vectorstore.as_retriever(
         search_type="mmr",
         search_kwargs={
-            "k": 5,
+            "k": 3,
         }
     )
 
@@ -135,9 +132,12 @@ def get_conversation_chain(vectorstore):
     question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
     retrieval_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
 
+    def get_session_history() -> BaseChatMessageHistory:
+        return st.session_state["chat_history"]
+
     conversational_retrieval_chain = RunnableWithMessageHistory(
         retrieval_chain,
-        get_session_history=st.session_state["chat_history"],
+        get_session_history,
         input_messages_key="input",
         history_messages_key="chat_history",
         output_messages_key="answer",
@@ -155,6 +155,7 @@ def handle_user_input(user_question):
 
     response = st.session_state.conversation.invoke(input_data)
 
+    # st.write(response)
     # answer_text = response['answer']
     # st.write(st.session_state.chat_history)
 
@@ -236,7 +237,6 @@ def chunk_resume(key_sections):
     return chunked_resume
 
 def main():
-    load_dotenv()
     st.set_page_config(page_title="Chat with multiple PDFs", page_icon=":books:")
 
     st.write(css, unsafe_allow_html=True)
