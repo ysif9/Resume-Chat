@@ -15,7 +15,8 @@ from langchain_ollama import OllamaEmbeddings
 from langchain_ollama.llms import OllamaLLM
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from spacy.lang.en import English
-
+from langchain.retrievers import ContextualCompressionRetriever
+from langchain.retrievers.document_compressors import LLMChainExtractor
 from htmlTemplates import css, bot_template, user_template
 
 llm = OllamaLLM(model="gemma2:2b")
@@ -33,8 +34,8 @@ def get_pdf_text(pdf_docs):
 
 def get_text_chunks(raw_text):
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=100,
-        chunk_overlap=20,
+        chunk_size=350,
+        chunk_overlap=100,
         separators=["\n\n", "\n", " ", ""],
     )
     chunks = text_splitter.split_text(raw_text)
@@ -90,9 +91,14 @@ def get_conversation_chain(vectorstore):
     retriever = vectorstore.as_retriever(
         search_type="mmr",
         search_kwargs={
-            "k": 3,
+            "k": 5,
         }
     )
+
+    # compressor = LLMChainExtractor.from_llm(llm)
+    # compression_retriever = ContextualCompressionRetriever(
+    #     base_compressor=compressor, base_retriever=retriever
+    # )
 
     contextualize_q_system_prompt = (
         "Given a chat history and the latest user question "
@@ -117,8 +123,8 @@ def get_conversation_chain(vectorstore):
         "You are an assistant for question-answering tasks. "
         "Use the following pieces of retrieved context to answer "
         "the question. If you don't know the answer, say that you "
-        "don't know. Use three sentences maximum and keep the "
-        "answer concise."
+        "don't know. Use 10 sentences maximum"
+        # "answer concise."
         "\n\n"
         "{context}"
     )
