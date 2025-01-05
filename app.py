@@ -161,7 +161,7 @@ def handle_user_input(user_question):
 
     response = st.session_state.conversation.invoke(input_data)
 
-    st.write(response)
+    # st.write(response)
     # answer_text = response['answer']
     # st.write(st.session_state.chat_history)
 
