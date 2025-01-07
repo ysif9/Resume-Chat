@@ -14,3 +14,10 @@ A Streamlit-based RAG application that enables users to analyze resumes against 
 ## Future Enhancements
 
 - [ ] Adding job description to the conversational AI.
+- [ ] Automated Candidate Scoring.
+- [ ] Customizable Job Requirement.
+- [ ] Experience and Qualification Parsing.
+- [ ] Batch Resume Upload and Analysis.
+- [ ] Exportable Reports.
+- [ ] Integration with ATS.
+- [ ] Candidate Analytics.
